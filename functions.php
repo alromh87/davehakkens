@@ -356,7 +356,130 @@ function ntwb_bbpress_topic_css_role() {
 }
 
 
+//*************************************//
+class ppmap_pin {
+  function __construct() {
+    add_action('init',array($this,'create_post_type'));
+    add_action('init',array($this,'create_taxonomies'));
 
+    add_action('init',array($this,'add_meta2REST'));
+  }
+  function add_meta2REST(){
+    $args1 = array(
+      // Validate and sanitize the meta value.
+      // Note: currently (4.7) one of 'string', 'boolean', 'integer',
+      // 'number' must be used as 'type'. The default is 'string'.
+      'type'         => 'string',
+      // Shown in the schema for the meta key.
+      'description'  => 'A meta key associated with a string meta value.',
+      // Return a single value of the type.
+      'single'       => true,
+      // Show in the WP REST API response. Default: false.
+      'show_in_rest' => true,
+    );
+    register_meta( 'post', 'ppmap_lat', $args1 );
+    register_meta( 'post', 'ppmap_lng', $args1 );
+    register_meta( 'post', 'ppmap_status', $args1 );
+    register_meta( 'post', 'ppmap_url', $args1 );
+  }
+
+  function create_post_type() {
+    $labels = array(
+      'name'               => 'Map pins',
+      'singular_name'      => 'Map pin'
+    );
+
+    $args = array(
+      'labels'              => $labels,
+      'public'              => true,
+      'exclude_from_search' => false,
+      'publicly_queryable'  => true,
+      'show_ui'             => true,
+      'show_in_nav_menus'   => true,
+      'show_in_menu'        => true,
+      'show_in_admin_bar'   => true,
+      'show_in_rest'        => true,
+      'rest_base'           => 'map_pins',
+      'menu_position'       => 5,
+      'menu_icon'           => 'dashicons-location',
+      'capability_type'     => 'post',
+      'hierarchical'        => false,
+      'supports'            => array( 'title', 'editor', 'author', 'custom-fields'),
+      'has_archive'         => true,
+      'rewrite'             => array( 'slug' => 'map_pins' ),
+      'query_var'           => true
+    );
+
+    register_post_type( 'ppmap_pin', $args );
+  }
+
+
+  function create_taxonomies() {
+    // Add a taxonomy for pins associated Services
+    $labels = array(
+      'name'              => 'Services',
+      'singular_name'     => 'Service',
+      'search_items'      => 'Search Services',
+      'all_items'         => 'All Services',
+      'parent_item'       => null,
+      'parent_item_colon' => null,
+      'edit_item'         => 'Edit Service',
+      'update_item'       => 'Update Service',
+      'add_new_item'      => 'Add New Service',
+      'new_item_name'     => 'New Service Name',
+      'menu_name'         => 'Services'
+    );
+
+    $args = array(
+      'hierarchical'      => true,
+      'labels'            => $labels,
+      'show_ui'           => true,
+      'show_in_rest'      => true,
+      'show_admin_column' => true,
+      'query_var'         => true,
+      'rewrite'           => array( 'slug' => 'services' ),
+    );
+
+    register_taxonomy('ppmap_pin_service',array('ppmap_pin'),$args);
+
+    // Add a taxonomy for pins Hashtags
+    $labels = array(
+      'name'                       => 'HashTags',
+      'singular_name'              => 'HashTag',
+      'search_items'               => 'Search Tags',
+      'popular_items'              => 'Popular Tags',
+      'all_items'                  => 'All Tags',
+      'parent_item'                => null,
+      'parent_item_colon'          => null,
+      'edit_item'                  => 'Edit Tag',
+      'update_item'                => 'Update Tag',
+      'add_new_item'               => 'Add New Tag',
+      'new_item_name'              => 'New Tag Name',
+      'separate_items_with_commas' => 'Separate Tags with commas',
+      'add_or_remove_items'        => 'Add or remove Tags',
+      'choose_from_most_used'      => 'Choose from most used Tags',
+      'not_found'                  => 'No Tags found',
+      'menu_name'                  => 'Tags',
+    );
+
+    $args = array(
+      'hierarchical'          => false,
+      'labels'                => $labels,
+      'show_ui'               => true,
+      'show_in_rest'          => true,
+      'show_admin_column'     => true,
+      'update_count_callback' => '_update_post_term_count',
+      'query_var'             => true,
+      'rewrite'               => array( 'slug' => 'tags' ),
+    );
+
+    register_taxonomy('ppmap_pin_tag','ppmap_pin',$args);
+  }
+}
+
+new ppmap_pin();
+
+//*************************************//
 
 
 //ad sidebar
