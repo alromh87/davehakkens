@@ -479,6 +479,149 @@ class ppmap_pin {
 
 new ppmap_pin();
 
+function get_pp_pins( $data ) {
+  global $wpdb;
+  $query = "SELECT * FROM pp_pins";
+  if (isset($data['id'])){
+    $query .= " WHERE id=" . intval($data['id']);
+  }
+  $query .= ";";
+  $pins = $wpdb->get_results($query);
+  foreach ($pins as &$pin){
+    $query = "SELECT service FROM pp_pins_services_pin WHERE pin =". $pin->id .";";
+    $services = $wpdb->get_col($query);
+    foreach($services as &$service)$service=intval($service);
+    $pin->services = $services;
+    $query = "SELECT tag FROM pp_pins_tags_pin WHERE pin =". $pin->id .";";
+    $tags = $wpdb->get_col($query);
+    foreach($tags as &$tag)$tag=intval($tag);
+    $pin->tags = $tags;
+  }
+  if ( empty($pins) ) {
+    return array("error"=>"not found");
+  }
+  return $pins;
+}
+
+function create_pp_pin( $data ) {
+  global $wpdb;
+  $db = "pp_pins";
+  $dataDB = array(
+    'lat'		=> $data['lat'],
+    'long'		=> $data['long'],
+    'name'		=> $data['name'],
+    'description'	=> $data['description'],
+    'status'		=> $data['status'],
+    'url'		=> $data['url']
+  );
+//  print_r($dataDB);
+  $format = array(
+    '%f',
+    '%f',
+    '%s',
+    '%s',
+    '%s',
+    '%s'
+  );
+  $pin = $wpdb->insert($db, $dataDB, $format);
+  if ( $pin ) {
+    $dataDB['id'] = $wpdb->insert_id;
+    return $dataDB;
+  }else{
+    return array("error"=>"not inserted");
+  }
+}
+function delete_pp_pin( $data ) {
+  global $wpdb;
+  $db = "pp_pins";
+  $dataDB = array(
+    'id' => $data['id']
+  );
+  $format = array(
+    '%d'
+  );
+  $pin = $wpdb->delete($db, $dataDB, $format);
+  return array("deleted" => $pin?true:false);
+}
+
+function get_pp_pins_services( $data ) {
+  global $wpdb;
+  $query = "SELECT * FROM pp_pins_services";
+  if (isset($data['id'])){
+    $query .= " WHERE id=" . intval($data['id']);
+  }
+  $query .= ";";
+  $result = $wpdb->get_results($query);
+  if ( empty($result) ) {
+    return array("error"=>"not found");
+  }
+  return $result;
+}
+
+function get_pp_pins_tags( $data ) {
+  global $wpdb;
+  $query = "SELECT * FROM pp_pins_tags";
+  if (isset($data['id'])){
+    $query .= " WHERE id=" . intval($data['id']);
+  }
+  $query .= ";";
+  $result = $wpdb->get_results($query);
+  if ( empty($result) ) {
+    return array("error"=>"not found");
+  }
+  return $result;
+}
+
+add_action( 'rest_api_init', function () {
+  $namespace	= 'pp_pins/v1';
+  $route	= 'pins';
+  register_rest_route( $namespace, $route, array(
+    array(
+      'methods' => WP_REST_Server::READABLE,
+      'callback' => 'get_pp_pins',
+    ),
+    array(
+      'methods' => WP_REST_Server::CREATABLE,
+//      'methods' => WP_REST_Server::EDITABLE,
+//      'methods' => WP_REST_Server::DELETABLE,
+      'callback' => 'create_pp_pin',
+      'args' => array(
+        'lat' => array('required' => true),
+        'long' => array('required' => true),
+        'name' => array('required' => true),
+        'description' => array('required' => true),
+        'status' => array('required' => true),
+        'url' => array('default' => '')
+      ),
+    ),
+    array(
+      'methods' => WP_REST_Server::DELETABLE,
+      'callback' => 'delete_pp_pin',
+      'args' => array(
+        'id' => array('required' => true),
+      ),
+    )
+  ) );
+
+  register_rest_route( $namespace, $route.'/(?P<id>\d+)', array(
+    'methods' => WP_REST_Server::READABLE,
+    'callback' => 'get_pp_pins',
+  ) );
+
+  $route	= 'services';
+  register_rest_route( $namespace, $route, array(
+    'methods' => WP_REST_Server::READABLE,
+    'callback' => 'get_pp_pins_services',
+  ) );
+
+  $route	= 'tags';
+  register_rest_route( $namespace, $route, array(
+    'methods' => WP_REST_Server::READABLE,
+    'callback' => 'get_pp_pins_tags',
+  ) );
+
+} );
+
 //*************************************//
 
 
