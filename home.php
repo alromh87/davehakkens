@@ -16,10 +16,10 @@ get_template_part( 'navbar' );
       </li>
 
       <?php
-        wp_nav_menu([
+        wp_nav_menu(array(
           'container' => '',
           'theme_location' => 'grid_filter'
-        ]);
+        ));
       ?>
 
     </ul>

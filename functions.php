@@ -3,7 +3,7 @@
 include dirname( __FILE__ ) . '/includes/meta-boxes.php';
 
 add_theme_support( 'post-thumbnails' );
-add_theme_support( 'post-formats', [ 'image', 'status', 'video', 'link' ] );
+add_theme_support( 'post-formats', array( 'image', 'status', 'video', 'link' ) );
 
 add_action( 'init', 'register_project_post_type' );
 add_action( 'init', 'register_challenge_post_type' );
@@ -76,7 +76,7 @@ function register_project_post_type(){
 
 }
 
-$args = [
+$args = array(
   'name' => __( 'Forum sidebar' ),
   'id' => "forum-sidebar",
   'description' => '',
@@ -85,12 +85,12 @@ $args = [
   'after_widget' => "</li>\n",
   'before_title' => '<h2 class="widgettitle">',
   'after_title' => "</h2>\n",
-];
+);
 
 register_sidebar( $args );
 
-add_post_type_support( 'forum', [ 'thumbnail' ] );
-add_post_type_support( 'topic', [ 'thumbnail' ] );
+add_post_type_support( 'forum', array( 'thumbnail' ) );
+add_post_type_support( 'topic', array( 'thumbnail' ) );
 
 function custom_bbp_show_lead_topic( $show_lead ) {
   $show_lead[] = 'true';
@@ -126,9 +126,9 @@ function wcs_post_thumbnails_in_feeds( $content ) {
 add_filter( 'the_excerpt_rss', 'wcs_post_thumbnails_in_feeds' );
 add_filter( 'the_content_feed', 'wcs_post_thumbnails_in_feeds' );
 
-register_nav_menus([
+register_nav_menus(array(
   'grid_filter' => 'Filter for post grid',
-]);
+));
 /*
 add_filter( 'wp_mail', 'my_wp_mail_filter' );
 
@@ -403,6 +403,7 @@ function create_pp_pin( $data ) {
   global $wpdb;
   $db = 'pp_pins';
   $dataDB = array(
+    'owner'		=> get_current_user_id(),
     'lat'		=> $data['lat'],
     'long'		=> $data['long'],
     'name'		=> $data['name'],
@@ -412,6 +413,7 @@ function create_pp_pin( $data ) {
   );
 //  print_r($dataDB);
   $format = array(
+    '%d',
     '%f',
     '%f',
     '%s',
