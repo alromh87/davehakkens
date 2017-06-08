@@ -438,7 +438,8 @@ function create_pp_pin( $data ) {
     return array('error'=>'Could not insert pin');
   }
 }
-function delete_pp_pin( $data ) {
+
+function delete_pp_pin( $data ){
   global $wpdb;
   $format = array(
     '%d'
@@ -486,6 +487,16 @@ function get_pp_pins_tags( $data ) {
   return $result;
 }
 
+function pp_pins_check_login() {
+  if (!is_user_logged_in()){
+    return new WP_Error( 'rest_forbidden', esc_html__( 'Unauthorized', 'my-text-domain' ), array( 'status' => 401 ) );
+  }
+//  if (!current_user_can('edit_posts')){
+//    return new WP_Error( 'rest_forbidden', esc_html__( 'OMG you can not view private data.', 'my-text-domain' ), array( 'status' => 401 ) );
+//  }
+  return true;
+}
+
 add_action( 'rest_api_init', function () {
   $namespace	= 'pp_pins/v1';
   $route	= 'pins';
@@ -499,6 +510,7 @@ add_action( 'rest_api_init', function () {
 //      'methods' => WP_REST_Server::EDITABLE,
 //      'methods' => WP_REST_Server::DELETABLE,
       'callback' => 'create_pp_pin',
+      'permission_callback' => 'pp_pins_check_login',
       'args' => array(
         'lat' => array('required' => true),
         'long' => array('required' => true),
@@ -513,6 +525,7 @@ add_action( 'rest_api_init', function () {
     array(
       'methods' => WP_REST_Server::DELETABLE,
       'callback' => 'delete_pp_pin',
+      'permission_callback' => 'pp_pins_check_login',
       'args' => array(
         'id' => array('required' => true),
       ),
@@ -537,6 +550,19 @@ add_action( 'rest_api_init', function () {
   ) );
 
 } );
+
+/*
+add_action( 'rest_api_init', function() {
+  remove_filter( 'rest_pre_serve_request', 'rest_send_cors_headers' );
+  add_filter( 'rest_pre_serve_request', function( $value ) {
+    header( 'Access-Control-Allow-Origin: http://localhost' );
+    header( 'Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE' );
+    header( 'Access-Control-Allow-Credentials: true' );
+    header( 'Access-Control-Allow-Headers: X-WP-Nonce' );
+    return $value;
+  });
+}, 15 );
+*/
 
 //*************************************//
 
