@@ -363,6 +363,8 @@ function get_pp_pins( $data ) {
   $query = "SELECT * FROM pp_pins";
   if (isset($data['id'])){
     $query .= " WHERE id=" . intval($data['id']);
+  }else{
+    $query .= " WHERE validated != 0";
   }
   $query .= ";";
   $pins = $wpdb->get_results($query);
@@ -411,7 +413,6 @@ function create_pp_pin( $data ) {
     'status'		=> $data['status'],
     'url'		=> $data['url']
   );
-//  print_r($dataDB);
   $format = array(
     '%d',
     '%f',
@@ -428,14 +429,50 @@ function create_pp_pin( $data ) {
     $services = add_pin_extras($wpdb, $pinID, 'pp_pins_services_pin', 'service', $data['services']);
     $tags = add_pin_extras($wpdb, $pinID, 'pp_pins_tags_pin', 'tag', $data['tags']);
     if($services && $tags){
+
+      $images_urls = "";
+      foreach($data['photos'] as $b64_img){
+        require_once( ABSPATH . 'wp-admin/includes/image.php' );
+        require_once( ABSPATH . 'wp-admin/includes/file.php' );
+        require_once( ABSPATH . 'wp-admin/includes/media.php' );
+
+        $tempImg = tmpfile();
+        $pos = strpos($b64_img, ";");
+        $type = substr($b64_img, 5, $pos-5);
+        $b64_img = substr($b64_img, $pos+8);
+
+        fwrite($tempImg, base64_decode($b64_img));
+
+        $metaDatas = stream_get_meta_data($tempImg);
+        $file_array = array( 'name' => 'pp_pin_'. $pinID . '.' . substr($type,6),
+                         'type' => $type,
+                         'error' => 0,
+                         'size' => filesize($metaDatas['uri']),
+                         'tmp_name' => $metaDatas['uri']
+                       );
+        $attachment_id = media_handle_sideload($file_array, 0);
+        if( is_wp_error( $attachment_id )){
+          $wpdb->query( 'ROLLBACK' );
+          return array('error'=>'Could not insert pin');
+        }else{
+          $smallImg = wp_get_attachment_image_src( $attachment_id, 'medium'); //medium_large?
+          $images_urls.= wp_get_attachment_url($attachment_id). '>'. $smallImg[0] . '#';
+        }
+        fclose($temp);
+      }
+      $images_urls = rtrim($images_urls, '#');
+      $photos = $wpdb->update('pp_pins', array('images' => $images_urls), array('id' => $pinID), array('%s'));
+
       $wpdb->query( 'COMMIT' );
       $dataDB['id'] = $pinID;
       $dataDB['services'] = $data[services];
       $dataDB['tags'] = $data[tags];
+      $dataDB['images'] = $images_urls;
       return $dataDB;
     }
     $wpdb->query( 'ROLLBACK' );
     return array('error'=>'Could not insert pin');
+
   }else{
     return array('error'=>'Could not insert pin');
   }
@@ -443,6 +480,7 @@ function create_pp_pin( $data ) {
 
 function delete_pp_pin( $data ){
   global $wpdb;
+  $wpdb->query( 'BEGIN' );
   $format = array(
     '%d'
   );
@@ -457,7 +495,16 @@ function delete_pp_pin( $data ){
   $dataDB = array(
     'id' => $data['id']
   );
+  if(!current_user_can('edit_others_posts')){
+    $dataDB['owner'] = get_current_user_id();
+  }
+//TODO: borrar imagenes wp_delete_attachment
   $pin = $wpdb->delete($db, $dataDB, $format);
+  if(!$pin){
+    $wpdb->query( 'ROLLBACK' );
+  }else{
+    $wpdb->query( 'COMMIT' );
+  }
   return array("deleted" => $pin?true:false);
 }
 
