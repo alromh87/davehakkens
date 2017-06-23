@@ -701,15 +701,26 @@ a:hover {
     width: 100%;
     height: auto;
     display: inline-block;
-    margin-top: 5px;
+    margin-top: 40px;
+    font-family: 'medium';
+    font-size: 16px;
+    letter-spacing: 0.5px;
 }
 
-.authorinfo {
-    display: none!important;
+.authorinfo p {
+    margin-bottom: 10px;
+    color: #585858;
+}
+
+
+.single-format-image .date {
+    margin-top: 0px;
+    display: inline-block;
+    margin-left: 20px;
 }
 
 .authorinfo .author {
-    margin-top: 4px;
+    display:inline-block;
 }
 
 .single-post .meta .categories a{
@@ -807,6 +818,8 @@ padding: 6px 10px;
   display: inline-block;
   margin-left: -4px;
 }
+
+
 
 .relatedposts {
   width: 100%;
@@ -1969,7 +1982,9 @@ input#bbp_search {
   font-size: 12px;
 
 }
-
+#bbpress-forums div.bbp-search-form{
+  float:inherit!important;
+}
 
 .sidebar-banner {
   height: 100px;
@@ -3254,6 +3269,7 @@ div#respond {
   font-size: 12px;
   text-decoration: none;
   color: black;
+  word-break: break-all;
 }
 
 .comment-body .comment-author .says {
@@ -3937,6 +3953,17 @@ a.bp-avatar-nav-item {
     background-repeat: no-repeat;
 }
 
+#buddypress .profile .bp-widget .field_piggy {
+    background-image: url("https://davehakkens.nl/wp-content/themes/davehakkens2/img/icon/piggy.png")!important;
+    width: 85px;
+    height: 70px;
+    float: left;
+    text-indent: -9999px;
+    background-position: 25px 15px;
+    background-size: 55%;
+    background-repeat: no-repeat;
+}
+
 
 
 
@@ -4052,7 +4079,12 @@ form#send_message_form img.avatar.user-40296-avatar.avatar-15.photo {
   width: auto;
 }
 
-
+.littlenotification {
+  display: inline-block;
+  background-color: #6ea7dc;
+  padding: 0px 5px;
+  border-radius: 6px;
+}
 
 table.notifications tr {
     background-color: #fff!important;
@@ -5425,6 +5457,32 @@ body#tinymce {
     display: inline-block;
 }
 
+#badges .row{
+  margin: 0px;
+  padding: 0px;
+}
+#badges {
+    float:left!important;
+    margin-right: .5em!important;
+    display: inline-block;
+}
+
+#badges img {
+    max-height: 20px !important;
+    position: relative!important;
+    width: auto!important;
+    top: -3px!important;
+    margin-right: 0px;
+}
+.topic-lead .author #badges{
+    float: none!important;
+}
+
+.topic-lead .author #badges img{
+    max-height: 30px!important;
+    top: -2px!important;
+}
+
 .activity .wp_like_group {
     display: none;
 }
@@ -5715,6 +5773,7 @@ color: black;
     z-index: 99999;
     font-size: 14px;
     color: white;
+    display: none;
 }
 
 

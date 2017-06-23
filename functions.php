@@ -215,14 +215,7 @@ function my_login_logo_url_title() {
 }
 add_filter( 'login_headertitle', 'my_login_logo_url_title' );
 
-*/
 
-
-//change more.. on homepage
-function modify_read_more_link() {
-    return '<a class="more-link" href="' . get_permalink() . '">keep going..</a>';
-}
-add_filter( 'the_content_more_link', 'modify_read_more_link' );
 
 /*
 
@@ -241,6 +234,13 @@ function bbp_tinymce_paste_plain_text( $plugins = array() ) {
 add_filter( 'bbp_get_tiny_mce_plugins', 'bbp_tinymce_paste_plain_text' );
 
 */
+
+//change more.. on homepage
+function modify_read_more_link() {
+    return '<a class="more-link" href="' . get_permalink() . '">Read all..</a>';
+}
+add_filter( 'the_content_more_link', 'modify_read_more_link' );
+
 
 //set max topic title to 50
 add_filter ('bbp_get_title_max_length','rkk_change_title') ;
@@ -355,9 +355,27 @@ function ntwb_bbpress_topic_css_role() {
 	return $args;
 }
 
+//Redirect wp-login to community login
+function redirect_login_page() {
+  $login_page  = home_url( 'community/login/' );
+  $page_viewed = basename($_SERVER['REQUEST_URI']);
+
+  if( $page_viewed == "wp-login.php" && $_SERVER['REQUEST_METHOD'] == 'GET') {
+    wp_redirect($login_page);
+    exit;
+  }
+}
+add_action('init','redirect_login_page');
+
+
+function logout_page() {
+  $login_page  = home_url( 'community/login/' );
+  wp_redirect( $login_page . "?login=false" );
+  exit;
+}
+add_action('wp_logout','logout_page');
 
 //*************************************//
-
 function get_pp_pins( $data ) {
   global $wpdb;
   $query = "SELECT * FROM pp_pins";
@@ -615,6 +633,31 @@ add_action( 'rest_api_init', function() {
 
 //*************************************//
 
+function login_failed() {
+  $login_page  = home_url( '/login/' );
+  wp_redirect( $login_page . '?login=failed' );
+  exit;
+}
+add_action( 'wp_login_failed', 'login_failed' );
+
+function verify_username_password( $user, $username, $password ) {
+  $login_page  = home_url( 'community/login/' );
+    if( $username == "" || $password == "" ) {
+        wp_redirect( $login_page . "?login=empty" );
+        exit;
+    }
+}
+add_filter( 'authenticate', 'verify_username_password', 1, 3);
+
+
+
+//change logo login
+function custom_loginlogo() {
+echo '<style type="text/css">
+h1 a {background-image: url('.get_bloginfo('template_directory').'/images/login.svg) !important; }
+</style>';
+}
+add_action('login_head', 'custom_loginlogo');
 
 //ad sidebar
 if ( is_active_sidebar( 'primary' ) ) : ?>
@@ -626,3 +669,36 @@ if ( is_active_sidebar( 'primary' ) ) : ?>
     </div><!-- #primary .aside -->
 
 <?php endif; ?>
+
+
+<?php
+/* Modified from  'mycred_display_users_badges' to just display selected badges, TODO: pass argumment and merge upstream */
+if ( ! function_exists( 'mycred_display_custom_users_badges' ) ) :
+    function mycred_display_custom_users_badges( $user_id = NULL, $width = MYCRED_BADGE_WIDTH, $height = MYCRED_BADGE_HEIGHT ) {
+        $user_id = absint( $user_id );
+        if ( $user_id === 0 ) return;
+        $valid_badges = array(4709, 4710, 4744);
+        $users_badges = mycred_get_users_badges( $user_id );
+
+        echo '<div class="row" id="mycred-users-badges"><div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">';
+
+        do_action( 'mycred_before_users_badges', $user_id, $users_badges );
+        if ( ! empty( $users_badges ) ) {
+            foreach ( $users_badges as $badge_id => $level ) {
+                if (!in_array($badge_id, $valid_badges))continue;
+                $badge = mycred_get_badge( $badge_id, $level );
+                if ( $badge === false ) continue;
+                $badge->image_width  = $width;
+                $badge->image_height = $height;
+
+                if ( $badge->level_image !== false )
+                    echo apply_filters( 'mycred_the_badge', $badge->get_image( $level ), $badge_id, $badge, $user_id );
+            }
+        }
+        do_action( 'mycred_after_users_badges', $user_id, $users_badges );
+        echo '</div></div>';
+    }
+endif;
+
+?>
+
